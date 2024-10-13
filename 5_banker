@@ -1,0 +1,96 @@
+#include <stdio.h>
+
+// Number of processes and resources
+#define P 5  // Number of processes
+#define R 3  // Number of resources
+
+// Function to check if the system is in a safe state
+int isSafeState(int processes[], int avail[], int max[][R], int alloc[][R], int need[][R]) {
+    int work[R], finish[P] = {0}; // Work and Finish arrays
+    int safeSeq[P]; // To store the safe sequence
+    int count = 0;
+
+    // Initialize work as the available resources
+    for (int i = 0; i < R; i++) {
+        work[i] = avail[i];
+    }
+
+    // Find an index i such that finish[i] == 0 and need[i] <= work
+    while (count < P) {
+        int found = 0;
+        for (int i = 0; i < P; i++) {
+            if (finish[i] == 0) {
+                int j;
+                for (j = 0; j < R; j++) {
+                    if (need[i][j] > work[j]) {
+                        break;
+                    }
+                }
+
+                // If all needs of i can be satisfied
+                if (j == R) {
+                    for (int k = 0; k < R; k++) {
+                        work[k] += alloc[i][k]; // Add allocated resources to work
+                    }
+                    safeSeq[count++] = i; // Add this process to safe sequence
+                    finish[i] = 1;        // Mark process as finished
+                    found = 1;
+                }
+            }
+        }
+
+        // If no process was found, return false (unsafe)
+        if (found == 0) {
+            printf("System is not in a safe state.\n");
+            return 0;
+        }
+    }
+
+    // If system is in a safe state
+    printf("System is in a safe state.\nSafe sequence is: ");
+    for (int i = 0; i < P; i++) {
+        printf("%d ", safeSeq[i]);
+    }
+    printf("\n");
+    return 1;
+}
+
+int main() {
+    int processes[] = {0, 1, 2, 3, 4}; // Process IDs
+
+    // Available resources
+    int avail[] = {3, 3, 2};
+
+    // Maximum resource matrix (Max demand of each process)
+    int max[P][R] = {
+        {7, 5, 3},
+        {3, 2, 2},
+        {9, 0, 2},
+        {2, 2, 2},
+        {4, 3, 3}
+    };
+
+    // Allocated resource matrix (Resources already allocated to processes)
+    int alloc[P][R] = {
+        {0, 1, 0},
+        {2, 0, 0},
+        {3, 0, 2},
+        {2, 1, 1},
+        {0, 0, 2}
+    };
+
+    // Need matrix (Remaining resources needed by each process)
+    int need[P][R];
+
+    // Calculate the need matrix: Need[i][j] = Max[i][j] - Alloc[i][j]
+    for (int i = 0; i < P; i++) {
+        for (int j = 0; j < R; j++) {
+            need[i][j] = max[i][j] - alloc[i][j];
+        }
+    }
+
+    // Check if the system is in a safe state
+    isSafeState(processes, avail, max, alloc, need);
+
+    return 0;
+}
