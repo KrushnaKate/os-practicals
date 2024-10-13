@@ -1,0 +1,152 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100
+
+void sort(int arr[], int n) {
+    for (int i = 0; i < n-1; i++) {
+        for (int j = 0; j < n-i-1; j++) {
+            if (arr[j] > arr[j+1]) {
+                int temp = arr[j];
+                arr[j] = arr[j+1];
+                arr[j+1] = temp;
+            }
+        }
+    }
+}
+
+void sstf(int requests[], int n, int head) {
+    int total_movement = 0, current = head;
+    int visited[MAX] = {0};
+
+    printf("\nSSTF Disk Scheduling:\n");
+    printf("Head Movement: %d", head);
+
+    for (int i = 0; i < n; i++) {
+        int min_distance = 10000, idx = -1;
+
+        // Find the closest unvisited request
+        for (int j = 0; j < n; j++) {
+            if (!visited[j] && abs(current - requests[j]) < min_distance) {
+                min_distance = abs(current - requests[j]);
+                idx = j;
+            }
+        }
+
+        visited[idx] = 1;
+        total_movement += min_distance;
+        current = requests[idx];
+        printf(" -> %d", current);
+    }
+
+    printf("\nTotal head movement: %d\n", total_movement);
+}
+
+void scan(int requests[], int n, int head, int disk_size) {
+    int total_movement = 0;
+    int left[MAX], right[MAX], left_count = 0, right_count = 0;
+
+    // Split requests into left and right of head
+    for (int i = 0; i < n; i++) {
+        if (requests[i] < head)
+            left[left_count++] = requests[i];
+        else
+            right[right_count++] = requests[i];
+    }
+
+    sort(left, left_count);
+    sort(right, right_count);
+
+    printf("\nSCAN Disk Scheduling:\n");
+    printf("Head Movement: %d", head);
+
+    // First service the requests on the right of the head (moving away from spindle)
+    for (int i = 0; i < right_count; i++) {
+        total_movement += abs(head - right[i]);
+        head = right[i];
+        printf(" -> %d", head);
+    }
+
+    // Now move to the end of the disk
+    if (head != disk_size - 1) {
+        total_movement += abs(head - (disk_size - 1));
+        head = disk_size - 1;
+        printf(" -> %d", head);
+    }
+
+    // Now service the requests on the left of the head (moving towards spindle)
+    for (int i = left_count - 1; i >= 0; i--) {
+        total_movement += abs(head - left[i]);
+        head = left[i];
+        printf(" -> %d", head);
+    }
+
+    printf("\nTotal head movement: %d\n", total_movement);
+}
+
+void clook(int requests[], int n, int head) {
+    int total_movement = 0;
+    int left[MAX], right[MAX], left_count = 0, right_count = 0;
+
+    // Split requests into left and right of head
+    for (int i = 0; i < n; i++) {
+        if (requests[i] < head)
+            left[left_count++] = requests[i];
+        else
+            right[right_count++] = requests[i];
+    }
+
+    sort(left, left_count);
+    sort(right, right_count);
+
+    printf("\nC-LOOK Disk Scheduling:\n");
+    printf("Head Movement: %d", head);
+
+    // First service the requests on the right of the head (moving away from spindle)
+    for (int i = 0; i < right_count; i++) {
+        total_movement += abs(head - right[i]);
+        head = right[i];
+        printf(" -> %d", head);
+    }
+
+    // Now move directly to the first request on the left (without going to the end of the disk)
+    if (left_count > 0) {
+        total_movement += abs(head - left[0]);
+        head = left[0];
+        printf(" -> %d", head);
+    }
+
+    // Now service the remaining requests on the left of the head
+    for (int i = 1; i < left_count; i++) {
+        total_movement += abs(head - left[i]);
+        head = left[i];
+        printf(" -> %d", head);
+    }
+
+    printf("\nTotal head movement: %d\n", total_movement);
+}
+
+int main() {
+    int n, head, disk_size, requests[MAX];
+
+    printf("Enter the size of the disk: ");
+    scanf("%d", &disk_size);
+
+    printf("Enter the number of requests: ");
+    scanf("%d", &n);
+
+    printf("Enter the requests:\n");
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &requests[i]);
+    }
+
+    printf("Enter the initial head position: ");
+    scanf("%d", &head);
+
+    // Call each algorithm
+    sstf(requests, n, head);
+    scan(requests, n, head, disk_size);
+    clook(requests, n, head);
+
+    return 0;
+}
